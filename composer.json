@@ -1,0 +1,15 @@
+{
+    "name": "pluswerk/wikipedia_importer",
+    "type": "typo3-cms-extension",
+    "description": "Imorts random wikipedia articles to news records in order to serve as test records for eg. a search function",
+    "license": "GPL-2.0+",
+    "require": {
+        "typo3/cms-core": "^9.4",
+        "duzun/hquery": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pluswerk\\WikipediaImporter\\": "Classes"
+        }
+    }
+}
