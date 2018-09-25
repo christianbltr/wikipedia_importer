@@ -1,4 +1,4 @@
-# WikipediaImporter
+# WikipediaImporter for TYPO3
 
 Imports random wikipedia articles to news records in order to serve as test records for eg. a search function.
 
