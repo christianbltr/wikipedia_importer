@@ -17,7 +17,7 @@ $EM_CONF['wikipedia_importer'] = [
     ],
     'autoload' => [
         'psr-4' => [
-            'Pluswerk\\WikipediaImporter\\' => 'Classes'
+            'Christianbltr\\WikipediaImporter\\' => 'Classes'
         ]
     ],
 ];
