@@ -11,5 +11,10 @@
         "psr-4": {
             "Christianbltr\\WikipediaImporter\\": "Classes"
         }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "wikipedia_importer"
+        }
     }
 }
