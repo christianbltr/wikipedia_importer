@@ -108,7 +108,8 @@ class ImportFromWikipediaCommand extends Command
                     'crdate' => time(),
                     'datetime' => time(),
                     'title' => $title,
-                    'bodytext' => $content
+                    'bodytext' => $content,
+                    'related_links' => 0
                 ])
                 ->execute();
 
