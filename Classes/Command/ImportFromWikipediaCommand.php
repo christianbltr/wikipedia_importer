@@ -64,14 +64,14 @@ class ImportFromWikipediaCommand extends Command
 
         if (!$input->getOption('page')) {
             $io->writeln('Error: No page specified (use --page option).');
-            return;
+            return 1;
         } else {
             $page = intval($input->getOption('page'));
         }
 
         if (!ExtensionManagementUtility::isLoaded('news')) {
             $io->writeln('Error: Extension "news" needs to be installed.');
-            return;
+            return 1;
         }
 
         $io->writeLn('Importing ' . $amount . ' wikipedia articles to page ' . $page . ':');
@@ -115,5 +115,7 @@ class ImportFromWikipediaCommand extends Command
             // output
             if ($affectedRows) $io->writeln($title . ' (' . $doc->baseURI() . ')');
         }
+
+        return 0;
     }
 }

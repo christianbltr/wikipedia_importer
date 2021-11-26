@@ -1,0 +1,7 @@
+services:
+
+  Christianbltr\WikipediaImporter\Command\ImportFromWikipediaCommand:
+    tags:
+      - name: 'console.command'
+        command: 'wikipedia_importer:importfromwikipedia'
+        description: 'Import wikedia articles as news'
