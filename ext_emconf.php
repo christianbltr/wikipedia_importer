@@ -12,7 +12,7 @@ $EM_CONF['wikipedia_importer'] = [
     'version' => '1.0.1',
     'constraints' => [
         'depends' => [
-            'typo3' => '10.4.0-11.99.99',
+            'typo3' => '10.0.0-12.99.99',
         ]
     ],
     'autoload' => [
