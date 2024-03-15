@@ -5,7 +5,7 @@
     "license": "GPL-2.0+",
     "require": {
         "typo3/cms-core": "^10 | ^11 | ^12",
-        "duzun/hquery": "^3.0"
+        "duzun/hquery": "^3.1"
     },
     "autoload": {
         "psr-4": {
@@ -14,7 +14,16 @@
     },
     "extra": {
         "typo3/cms": {
-            "extension-key": "wikipedia_importer"
+            "extension-key": "wikipedia_importer",
+            "web-dir": ".Build/web"
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "typo3/cms-composer-installers": true,
+            "typo3/class-alias-loader": true
+        },
+        "bin-dir": ".Build/bin",
+        "vendor-dir": ".Build/vendor"
     }
 }
