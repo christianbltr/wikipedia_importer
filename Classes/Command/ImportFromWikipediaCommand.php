@@ -26,14 +26,8 @@ use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use duzun\hQuery;
 
-/**
- * CommandController for working with extension management through CLI/scheduler
- */
 class ImportFromWikipediaCommand extends Command
 {
-    /**
-     * Configure the command by defining the name, options and arguments
-     */
     protected function configure()
     {
         $this->setDescription('Imports random wikipedia articles to TYPO3.')
@@ -45,14 +39,7 @@ class ImportFromWikipediaCommand extends Command
             ->addOption('number_of_records', 'c', InputOption::VALUE_OPTIONAL, 'Number of articles to import');
     }
 
-    /**
-     * Executes the command for showing sys_log entries
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @throws \Exception
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $io->title($this->getDescription());
@@ -64,14 +51,14 @@ class ImportFromWikipediaCommand extends Command
 
         if (!$input->getOption('page')) {
             $io->writeln('Error: No page specified (use --page option).');
-            return 1;
+            return self::FAILURE;
         } else {
             $page = intval($input->getOption('page'));
         }
 
         if (!ExtensionManagementUtility::isLoaded('news')) {
             $io->writeln('Error: Extension "news" needs to be installed.');
-            return 1;
+            return selft::FAILURE;
         }
 
         $io->writeLn('Importing ' . $amount . ' wikipedia articles to page ' . $page . ':');
@@ -111,12 +98,12 @@ class ImportFromWikipediaCommand extends Command
                     'bodytext' => $content,
                     'related_links' => 0
                 ])
-                ->execute();
+                ->executeStatement();
 
             // output
             if ($affectedRows) $io->writeln($title . ' (' . $doc->baseURI() . ')');
         }
 
-        return 0;
+        return self::SUCCESS;
     }
 }
