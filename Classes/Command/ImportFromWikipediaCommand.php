@@ -70,15 +70,26 @@ class ImportFromWikipediaCommand extends Command
             $title = $doc->find('h1');
             $content = $doc->find('#mw-content-text');
 
-            // cleanup content
+            // Clean up title
             $title = strip_tags($title);
+
+            // Clean up content
+            // Remove style tag including content
+            $content = $this->strip_tags_content($content, '<style>', true);
+            // Remove attributes like "class" and "style"
+            // https://stackoverflow.com/questions/3026096/remove-all-attributes-from-html-tags
+            $content = preg_replace("/<([a-z][a-z0-9]*)[^>]*?(\/?)>/si",'<$1$2>', $content);
+            // Remove most of the tags
             $content = strip_tags($content, '<p><br><h2><table><tr><td><th><tf>');
+            // Remove multiple spaces
             $content = preg_replace('/\s+/', ' ',$content);
+            // Remove content
             $content = str_replace('[edit]', '', $content);
+            $content = str_replace('vte Retrieved from https://', '<br />Retrieved from https://', $content);
 
             // add copyright
             $content .=
-                'This article uses material from the Wikipedia article '
+                '<br />This article uses material from the Wikipedia article '
                 . '<a href="' . $doc->baseURI() . '">"' . $title . '"</a>'
                 . ', which is released under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share-Alike License 3.0</a>.';
 
@@ -105,5 +116,33 @@ class ImportFromWikipediaCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Strips HTML tags including content
+     * https://stackoverflow.com/a/65536384/6865338
+     *
+     * @param string $text
+     * @param string $tags
+     * @param bool $invert
+     * @return array|string|null
+     */
+    public function strip_tags_content(string $text, string $tags = '', bool $invert = FALSE): array|string|null
+    {
+
+        preg_match_all('/<(.+?)[\s]*\/?[\s]*>/si', trim($tags), $tags);
+        $tags = array_unique((array)$tags[1]);
+
+        if(count($tags) > 0) {
+            if (!$invert) {
+                return preg_replace('@<(?!(?:'. implode('|', $tags) .')\b)(\w+)\b.*?>.*?</\1>@si', '', $text);
+            }
+            else {
+                return preg_replace('@<('. implode('|', $tags) .')\b.*?>.*?</\1>@si', '', $text);
+            }
+        } else if (!$invert) {
+            return preg_replace('@<(\w+)\b.*?>.*?</\1>@si', '', $text);
+        }
+        return $text;
     }
 }
