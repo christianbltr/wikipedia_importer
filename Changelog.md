@@ -2,6 +2,7 @@
 
 ## Upcoming verstion
 * [TASK] Make extension compatible with TYPO3 13
+* [TASK] Clean up content
 
 ## Version 1.1.0 - 2024-10-04
 * [TASK] Set related_links to 0

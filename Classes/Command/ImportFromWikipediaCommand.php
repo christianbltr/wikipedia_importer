@@ -85,7 +85,6 @@ class ImportFromWikipediaCommand extends Command
             $content = preg_replace('/\s+/', ' ',$content);
             // Remove content
             $content = str_replace('[edit]', '', $content);
-            $content = str_replace('vte Retrieved from https://', '<br />Retrieved from https://', $content);
 
             // add copyright
             $content .=
