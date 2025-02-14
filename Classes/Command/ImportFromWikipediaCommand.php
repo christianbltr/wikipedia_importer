@@ -14,6 +14,7 @@
 
 namespace Christianbltr\WikipediaImporter\Command;
 
+use Christianbltr\WikipediaImporter\Domain\Repository\CategoryRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -36,17 +37,31 @@ class ImportFromWikipediaCommand extends Command
                 . LF . 'If you want to get more detailed information, use the --verbose option.'
             )
             ->addOption('page', 'p', InputOption::VALUE_REQUIRED, 'Page to import to (news sysfolder).')
-            ->addOption('number_of_records', 'c', InputOption::VALUE_OPTIONAL, 'Number of articles to import');
+            ->addOption('number_of_records', 'u', InputOption::VALUE_OPTIONAL, 'Number of articles to import')
+            ->addOption('category', 'c', InputOption::VALUE_OPTIONAL, 'UID of category to assign');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $io->title($this->getDescription());
+        $categoryRepository = GeneralUtility::makeInstance(CategoryRepository::class);
 
         $amount = 1;
         if ($input->getOption('number_of_records')) {
             $amount = intval($input->getOption('number_of_records'));
+        }
+
+        $categoryUid = null;
+        if ($input->getOption('category')) {
+            $categoryUid = intval($input->getOption('category'));
+            $category = $categoryRepository->findByUid($categoryUid);
+            if (!$category) {
+                $io->writeln('Error: Category with UID ' . $categoryUid . ' not found.');
+                return self::FAILURE;
+            } else {
+                $io->writeln('Importing to category ' . $category['title'] . ' (UID ' . $categoryUid . ')');
+            }
         }
 
         if (!$input->getOption('page')) {
@@ -109,6 +124,20 @@ class ImportFromWikipediaCommand extends Command
                     'related_links' => 0
                 ])
                 ->executeStatement();
+
+            // assign category
+            $insertedId = $queryBuilder->getConnection()->lastInsertId();
+            if ($categoryUid) {
+                $queryBuilder
+                    ->insert('sys_category_record_mm')
+                    ->values([
+                        'uid_local' => $categoryUid,
+                        'uid_foreign' => $insertedId,
+                        'tablenames' => 'tx_news_domain_model_news',
+                        'fieldname' => 'categories'
+                    ])
+                    ->executeStatement();
+            }
 
             // output
             if ($affectedRows) $io->writeln($title . ' (' . $doc->baseURI() . ')');

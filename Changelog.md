@@ -1,8 +1,9 @@
 # Changelog
 
-## Upcoming verstion
+## Upcoming version
+* [FEATURE] Add option to import articles to a specific category
 * [TASK] Make extension compatible with TYPO3 13
-* [TASK] Clean up content
+* [TASK] Clean up content (e.g. remove style tag)
 
 ## Version 1.1.0 - 2024-10-04
 * [TASK] Set related_links to 0
