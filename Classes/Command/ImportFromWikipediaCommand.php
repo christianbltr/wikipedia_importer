@@ -29,6 +29,9 @@ use duzun\hQuery;
 
 class ImportFromWikipediaCommand extends Command
 {
+    const USER_AGENT = 'TYPO3 ImportFromWikipediaCommand, https://github.com/christianbltr/wikipedia_importer/';
+    const WIKIPEDIA_RANDOM_PAGE_URL = 'https://en.wikipedia.org/wiki/Special:Random';
+
     protected function configure()
     {
         $this->setDescription('Imports random wikipedia articles to TYPO3.')
@@ -79,7 +82,19 @@ class ImportFromWikipediaCommand extends Command
         $io->writeLn('Importing ' . $amount . ' wikipedia articles to page ' . $page . ':');
         for ($i=0; $i<$amount; $i++) {
             // get the document
-            $doc = hQuery::fromUrl('https://en.wikipedia.org/wiki/Special:Random', ['Accept' => 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8']);
+            $doc = hQuery::fromUrl(
+                self::WIKIPEDIA_RANDOM_PAGE_URL,
+                [
+                    'Accept' => 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+                    'User-Agent' => self::USER_AGENT
+                ]
+            );
+
+            if (!$doc) {
+                $io->writeln('Error: Failed to fetch Wikipedia page.');
+                $io->writeln(hQuery::$last_http_result->body ?? '');
+                return self::FAILURE;
+            }
 
             // get content
             $title = $doc->find('h1');

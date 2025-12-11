@@ -1,7 +1,9 @@
 # Changelog
 
-## Upcoming version (3.0.0)
+## Version 3.0.0 - 2025-11-11
 * [TASK] Make extension compatible with TYPO3 14
+* [TASK] Set user agent
+* [TASK] Add constants and error handling
 
 ## Version 2.0.0 - 2025-11-11
 * [FEATURE] Add option to import articles to a specific category
