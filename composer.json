@@ -4,7 +4,7 @@
     "description": "Imports random wikipedia articles to news records in order to serve as test records for eg. a search function",
     "license": "GPL-2.0+",
     "require": {
-        "typo3/cms-core": "^12 | ^13",
+        "typo3/cms-core": "^13 | ^14",
         "duzun/hquery": "^3"
     },
     "autoload": {
