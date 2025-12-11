@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming version
+## Version 2.0.0 - 2025-11-11
 * [FEATURE] Add option to import articles to a specific category
 * [TASK] Make extension compatible with TYPO3 13
 * [TASK] Clean up content (e.g. remove style tag)

@@ -9,10 +9,10 @@ $EM_CONF['wikipedia_importer'] = [
     'author_email' => 'christian.buelter@web.de',
     'state' => 'alpha',
     'clearCacheOnLoad' => true,
-    'version' => '1.1.0',
+    'version' => '2.0.0',
     'constraints' => [
         'depends' => [
-            'typo3' => '10.0.0-12.99.99',
+            'typo3' => '12.0.0-13.99.99',
         ]
     ],
     'autoload' => [
