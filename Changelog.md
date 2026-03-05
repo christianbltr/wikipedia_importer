@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 3.1.0 - 2026-03-05
+* [FEATURE] Add slug generation for path_segment field
+* [TASK] Add 1-second delay between imports to avoid rate limits
+* [TASK] Improve error handling and resilience during import process
+
 ## Version 3.0.0 - 2025-11-11
 * [TASK] Make extension compatible with TYPO3 14
 * [TASK] Set user agent

@@ -23,6 +23,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Slug\SlugNormalizer;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use duzun\hQuery;
@@ -76,86 +77,98 @@ class ImportFromWikipediaCommand extends Command
 
         if (!ExtensionManagementUtility::isLoaded('news')) {
             $io->writeln('Error: Extension "news" needs to be installed.');
-            return selft::FAILURE;
+            return self::FAILURE;
         }
 
+        $slugNormalizer = GeneralUtility::makeInstance(SlugNormalizer::class);
         $io->writeLn('Importing ' . $amount . ' wikipedia articles to page ' . $page . ':');
         for ($i=0; $i<$amount; $i++) {
-            // get the document
-            $doc = hQuery::fromUrl(
-                self::WIKIPEDIA_RANDOM_PAGE_URL,
-                [
-                    'Accept' => 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
-                    'User-Agent' => self::USER_AGENT
-                ]
-            );
+            try {
+                // get the document
+                $doc = hQuery::fromUrl(
+                    self::WIKIPEDIA_RANDOM_PAGE_URL,
+                    [
+                        'Accept' => 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+                        'User-Agent' => self::USER_AGENT
+                    ]
+                );
 
-            if (!$doc) {
-                $io->writeln('Error: Failed to fetch Wikipedia page.');
-                $io->writeln(hQuery::$last_http_result->body ?? '');
-                return self::FAILURE;
-            }
+                if (!$doc) {
+                    $io->writeln('Error: Failed to fetch Wikipedia page.');
+                    $io->writeln(hQuery::$last_http_result->body ?? '');
+                    // Wait 1 second after each import attempt
+                    sleep(1);
+                    continue;
+                }
 
-            // get content
-            $title = $doc->find('h1');
-            $content = $doc->find('#mw-content-text');
+                // get content
+                $title = $doc->find('h1');
+                $content = $doc->find('#mw-content-text');
 
-            // Clean up title
-            $title = strip_tags($title);
+                // Clean up title
+                $title = strip_tags($title);
+                $slug = $slugNormalizer->normalize($title);
 
-            // Clean up content
-            // Remove style tag including content
-            $content = $this->strip_tags_content($content, '<style>', true);
-            // Remove attributes like "class" and "style"
-            // https://stackoverflow.com/questions/3026096/remove-all-attributes-from-html-tags
-            $content = preg_replace("/<([a-z][a-z0-9]*)[^>]*?(\/?)>/si",'<$1$2>', $content);
-            // Remove most of the tags
-            $content = strip_tags($content, '<p><br><h2><table><tr><td><th><tf>');
-            // Remove multiple spaces
-            $content = preg_replace('/\s+/', ' ',$content);
-            // Remove content
-            $content = str_replace('[edit]', '', $content);
+                // Clean up content
+                // Remove style tag including content
+                $content = $this->strip_tags_content($content, '<style>', true);
+                // Remove attributes like "class" and "style"
+                // https://stackoverflow.com/questions/3026096/remove-all-attributes-from-html-tags
+                $content = preg_replace("/<([a-z][a-z0-9]*)[^>]*?(\/?)>/si",'<$1$2>', $content);
+                // Remove most of the tags
+                $content = strip_tags($content, '<p><br><h2><table><tr><td><th><tf>');
+                // Remove multiple spaces
+                $content = preg_replace('/\s+/', ' ',$content);
+                // Remove content
+                $content = str_replace('[edit]', '', $content);
 
-            // add copyright
-            $content .=
-                '<br />This article uses material from the Wikipedia article '
-                . '<a href="' . $doc->baseURI() . '">"' . $title . '"</a>'
-                . ', which is released under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share-Alike License 3.0</a>.';
+                // add copyright
+                $content .=
+                    '<br />This article uses material from the Wikipedia article '
+                    . '<a href="' . $doc->baseURI() . '">"' . $title . '"</a>'
+                    . ', which is released under the <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share-Alike License 3.0</a>.';
 
-            // insert into database
-            /** @var QueryBuilder $queryBuilder */
-            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-                ->getQueryBuilderForTable('tx_news_model_news');
+                // insert into database
+                /** @var QueryBuilder $queryBuilder */
+                $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+                    ->getQueryBuilderForTable('tx_news_model_news');
 
-            $affectedRows = $queryBuilder
-                ->insert('tx_news_domain_model_news')
-                ->values([
-                    'pid' => (int)$page,
-                    'tstamp' => time(),
-                    'crdate' => time(),
-                    'datetime' => time(),
-                    'title' => $title,
-                    'bodytext' => $content,
-                    'related_links' => 0
-                ])
-                ->executeStatement();
-
-            // assign category
-            $insertedId = $queryBuilder->getConnection()->lastInsertId();
-            if ($categoryUid) {
-                $queryBuilder
-                    ->insert('sys_category_record_mm')
+                $affectedRows = $queryBuilder
+                    ->insert('tx_news_domain_model_news')
                     ->values([
-                        'uid_local' => $categoryUid,
-                        'uid_foreign' => $insertedId,
-                        'tablenames' => 'tx_news_domain_model_news',
-                        'fieldname' => 'categories'
+                        'pid' => (int)$page,
+                        'tstamp' => time(),
+                        'crdate' => time(),
+                        'datetime' => time(),
+                        'title' => $title,
+                        'path_segment' => $slug,
+                        'bodytext' => $content,
+                        'related_links' => 0
                     ])
                     ->executeStatement();
+
+                // assign category
+                $insertedId = $queryBuilder->getConnection()->lastInsertId();
+                if ($categoryUid) {
+                    $queryBuilder
+                        ->insert('sys_category_record_mm')
+                        ->values([
+                            'uid_local' => $categoryUid,
+                            'uid_foreign' => $insertedId,
+                            'tablenames' => 'tx_news_domain_model_news',
+                            'fieldname' => 'categories'
+                        ])
+                        ->executeStatement();
+                }
+
+                // output
+                if ($affectedRows) $io->writeln($title . ' (' . $doc->baseURI() . ')');
+            } catch (\Exception $e) {
+                $io->writeln('Error during import: ' . $e->getMessage());
             }
 
-            // output
-            if ($affectedRows) $io->writeln($title . ' (' . $doc->baseURI() . ')');
+            // Wait 1 second after each import attempt
+            sleep(1);
         }
 
         return self::SUCCESS;
